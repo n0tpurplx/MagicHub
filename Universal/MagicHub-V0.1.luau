@@ -62,20 +62,29 @@ local Window = Rayfield:CreateWindow({
     KeySystem = true,
 
     KeySettings = {
-        Title = "MagicHub Key System",
-        Subtitle = "Get Your Key",
-        Note = "Click 'Get Key Link' below",
-        FileName = "MagicHubKey",
-        SaveKey = true,
-        GrabKeyFromSite = true,
+    Title = "MagicHub Key System",
+    Subtitle = "Get Your Key",
+    Note = "Press COPY KEY LINK",
+    FileName = "MagicHubKey",
+    SaveKey = false,
+    GrabKeyFromSite = true,
 
-        Key = {
-            KEY_LINK,
-            "KEY"
+    Key = {
+        "https://loot-link.com/s?MAo6QeXU",
+        "PERM_KEY"
+    },
+
+    Actions = {
+        {
+            Text = "COPY KEY LINK",
+            OnPress = function()
+                if setclipboard then
+                    setclipboard("https://loot-link.com/s?MAo6QeXU")
+                end
+            end
         }
     }
-})
-
+}
 --====================================================
 -- KEY TAB
 --====================================================
