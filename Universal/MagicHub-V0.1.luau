@@ -1,72 +1,134 @@
 -- 1. Load the Rayfield UI Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+-- Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+
 -- 2. Create the Main Window
 local Window = Rayfield:CreateWindow({
    Name = "MagicHub",
    LoadingTitle = "Loading MagicHub...",
    LoadingSubtitle = "by purplx",
+
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = "MagicHubConfig", 
+      FolderName = "MagicHubConfig",
       FileName = "BigHub"
    },
+
    KeySystem = false,
 })
 
--- 3. Create a Tab
-local MainTab = Window:CreateTab("Main Cheats", 4483362458)
+----------------------------------------------------
+-- MOVEMENT TAB
+----------------------------------------------------
 
--- 4. Add a Label (Informational text)
-local Label = MainTab:CreateLabel("Testing environment active - Enjoy experimenting!")
+local MovementTab = Window:CreateTab("Movement", 4483362458)
 
--- 5. Add a Slider (Smoothly adjust your WalkSpeed)
-local Slider = MainTab:CreateSlider({
+MovementTab:CreateLabel("WIP!!!")
+
+-- Speed Slider
+MovementTab:CreateSlider({
    Name = "Adjust Speed",
-   Range = {16, 250}, -- 16 is default Roblox speed
+   Range = {16, 250},
    Increment = 1,
    Suffix = " Studs/sec",
    CurrentValue = 16,
-   Flag = "SpeedSlider", 
+   Flag = "SpeedSlider",
+
    Callback = function(Value)
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+      local Character = LocalPlayer.Character
+      if Character and Character:FindFirstChild("Humanoid") then
+         Character.Humanoid.WalkSpeed = Value
+      end
    end,
 })
 
--- 6. Add a Toggle Element (Infinite Jump)
-local Toggle = MainTab:CreateToggle({
+----------------------------------------------------
+-- INFINITE JUMP
+----------------------------------------------------
+
+_G.InfiniteJump = false
+
+UserInputService.JumpRequest:Connect(function()
+   if _G.InfiniteJump then
+      local Character = LocalPlayer.Character
+
+      if Character then
+         local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+         if Humanoid then
+            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+         end
+      end
+   end
+end)
+
+MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
-   Flag = "InfJumpToggle", 
+   Flag = "InfJumpToggle",
+
    Callback = function(Value)
-       _G.InfiniteJump = Value
-       
-       game:GetService("UserInputService").JumpRequest:Connect(function()
-           if _G.InfiniteJump then
-               game.Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
-           end
-       end)
+      _G.InfiniteJump = Value
    end,
 })
 
--- 7. Add a Button Element (Quick Reset)
-local Button = MainTab:CreateButton({
+----------------------------------------------------
+-- RESET BUTTON
+----------------------------------------------------
+
+MovementTab:CreateButton({
    Name = "Reset Speed to Normal",
+
    Callback = function()
-       game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
-       Rayfield:Notify({
-          Title = "Speed Reset",
-          Content = "Your WalkSpeed has been set back to 16.",
-          Duration = 3,
-          Image = 4483362458,
-       })
+      local Character = LocalPlayer.Character
+
+      if Character and Character:FindFirstChild("Humanoid") then
+         Character.Humanoid.WalkSpeed = 16
+      end
+
+      Rayfield:Notify({
+         Title = "Speed Reset",
+         Content = "Your WalkSpeed has been set back to 16.",
+         Duration = 3,
+         Image = 4483362458,
+      })
    end,
 })
 
--- 8. Finish loading notification
+----------------------------------------------------
+-- RENDER TAB
+----------------------------------------------------
+
+local RenderTab = Window:CreateTab("Render", 4483362458)
+
+RenderTab:CreateButton({
+   Name = "Enable ESP",
+
+   Callback = function()
+
+      -- ESP code would go here
+
+      Rayfield:Notify({
+         Title = "ESP Enabled",
+         Content = "ESP has been enabled",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end,
+})
+
+----------------------------------------------------
+-- LOADED NOTIFICATION
+----------------------------------------------------
+
 Rayfield:Notify({
-    Title = "MagicHub Loaded!",
-    Content = "Using MagicHub-FREE V0.1 by purplx",
-    Duration = 5,
-    Image = 4483362458,
+   Title = "MagicHub Loaded!",
+   Content = "Using MagicHub-FREE V0.1 by purplx",
+   Duration = 5,
+   Image = 4483362458,
 })
