@@ -66,7 +66,7 @@ local Window = Rayfield:CreateWindow({
     Subtitle = "Get Your Key",
     Note = "Press COPY KEY LINK",
     FileName = "MagicHubKey",
-    SaveKey = false,
+    SaveKey = true,
     GrabKeyFromSite = true,
 
     Key = {
