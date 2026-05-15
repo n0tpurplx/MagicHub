@@ -37,8 +37,20 @@ local Window = Rayfield:CreateWindow({
         FileName = "Universal"
     },
 
-    KeySystem = false,
-})
+    KeySystem = true,
+
+KeySettings = {
+    Title = "MagicHub Key System",
+    Subtitle = "Enter Key",
+    Note = "Get the key from LootLabs",
+    FileName = "MagicHubKey",
+    SaveKey = true,
+    GrabKeyFromSite = false,
+
+    Key = {
+        "Free-magichub38484648401"
+    }
+}
 
 --====================================================
 -- VARIABLES
