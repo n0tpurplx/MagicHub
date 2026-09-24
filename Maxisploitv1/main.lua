@@ -186,6 +186,11 @@ UserInputService.InputChanged:Connect(function(Input)
     )
 end)
 
+local function SetStatus(Text, Color)
+    Status.Text = Text
+    Status.TextColor3 = Color
+end
+
 local function GetKey()
     if setclipboard then
         return pcall(setclipboard, Config.KeyURL)
@@ -202,135 +207,189 @@ local function GetKey()
     return false
 end
 
-local function SetStatus(Text, Color)
-    Status.Text = Text
-    Status.TextColor3 = Color
-end
-
 local function LoadObsidian()
-    local Success, Library = pcall(function()
-        return loadstring(game:HttpGet(Config.ObsidianURL))()
+    SetStatus(
+        "Loading Obsidian...",
+        Color3.fromRGB(255, 200, 100)
+    )
+
+    local LoadSuccess, LibraryOrError = pcall(function()
+        local Source = game:HttpGet(Config.ObsidianURL)
+
+        if not Source or Source == "" then
+            error("Obsidian source was empty")
+        end
+
+        local Loader = loadstring(Source)
+
+        if not Loader then
+            error("loadstring failed")
+        end
+
+        return Loader()
     end)
 
-    if not Success or not Library then
+    if not LoadSuccess then
         SetStatus(
-            "Failed to load Obsidian.",
+            "Obsidian: " .. tostring(LibraryOrError),
             Color3.fromRGB(255, 90, 90)
         )
+        return false
+    end
+
+    local Library = LibraryOrError
+
+    if not Library then
+        SetStatus(
+            "Obsidian returned no library.",
+            Color3.fromRGB(255, 90, 90)
+        )
+        return false
+    end
+
+    local WindowSuccess, WindowOrError = pcall(function()
+        Library.Scheme = {
+            BackgroundColor = Color3.fromRGB(15, 15, 18),
+            MainColor = Color3.fromRGB(22, 22, 27),
+            AccentColor = Color3.fromRGB(110, 65, 180),
+            OutlineColor = Color3.fromRGB(55, 55, 65),
+            FontColor = Color3.fromRGB(255, 255, 255),
+            Font = Font.fromEnum(Enum.Font.Gotham)
+        }
+
+        return Library:CreateWindow({
+            Title = Config.Title,
+            Footer = Config.Footer,
+            Center = true,
+            AutoShow = true,
+            Resizable = true,
+            ToggleKeybind = Enum.KeyCode.RightControl,
+            MobileButtonsSide = "Right"
+        })
+    end)
+
+    if not WindowSuccess then
+        SetStatus(
+            "Window: " .. tostring(WindowOrError),
+            Color3.fromRGB(255, 90, 90)
+        )
+        return false
+    end
+
+    local Window = WindowOrError
+
+    local SetupSuccess, SetupError = pcall(function()
+        local MainTab = Window:AddTab("Main", "home")
+
+        local FeatureBox = MainTab:AddLeftGroupbox("Features")
+
+        FeatureBox:AddLabel(Config.Title)
+        FeatureBox:AddLabel("Game testing features")
+
+        local AutoTrainRunning = false
+
+        local function StopAutoTrain()
+            AutoTrainRunning = false
+        end
+
+        local function StartAutoTrain()
+            if AutoTrainRunning then
+                return
+            end
+
+            AutoTrainRunning = true
+
+            task.spawn(function()
+                while AutoTrainRunning do
+                    task.wait(0.1)
+
+                    if not AutoTrainRunning then
+                        break
+                    end
+
+                    local SharedModules = ReplicatedStorage:FindFirstChild("SharedModules")
+
+                    if not SharedModules then
+                        continue
+                    end
+
+                    local Network = SharedModules:FindFirstChild("Network")
+
+                    if not Network then
+                        continue
+                    end
+
+                    local Remotes = Network:FindFirstChild("Remotes")
+
+                    if not Remotes then
+                        continue
+                    end
+
+                    local Event = Remotes:FindFirstChild("Activate Dumbell")
+
+                    if Event and Event:IsA("RemoteEvent") then
+                        pcall(function()
+                            Event:FireServer()
+                        end)
+                    end
+                end
+            end)
+        end
+
+        FeatureBox:AddToggle("AutoTrain", {
+            Text = "Auto Train",
+            Default = false,
+
+            Callback = function(Value)
+                if Value then
+                    StartAutoTrain()
+                else
+                    StopAutoTrain()
+                end
+            end
+        })
+
+        local SettingsTab = Window:AddTab("Settings", "settings")
+
+        local SettingsBox = SettingsTab:AddLeftGroupbox("Settings")
+
+        SettingsBox:AddButton({
+            Text = "Unload",
+
+            Func = function()
+                StopAutoTrain()
+                Library:Unload()
+            end
+        })
+
+        Library:OnUnload(function()
+            StopAutoTrain()
+        end)
+    end)
+
+    if not SetupSuccess then
+        pcall(function()
+            Library:Unload()
+        end)
+
+        SetStatus(
+            "Setup: " .. tostring(SetupError),
+            Color3.fromRGB(255, 90, 90)
+        )
+
+        return false
+    end
+
+    return true
+end
+
+local Unlocking = false
+
+local function Unlock()
+    if Unlocking then
         return
     end
 
-    Library.Scheme = {
-        BackgroundColor = Color3.fromRGB(15, 15, 18),
-        MainColor = Color3.fromRGB(22, 22, 27),
-        AccentColor = Color3.fromRGB(110, 65, 180),
-        OutlineColor = Color3.fromRGB(55, 55, 65),
-        FontColor = Color3.fromRGB(255, 255, 255),
-        Font = Font.fromEnum(Enum.Font.Gotham)
-    }
-
-    local Window = Library:CreateWindow({
-        Title = Config.Title,
-        Footer = Config.Footer,
-        Center = true,
-        AutoShow = true,
-        Resizable = true,
-        ToggleKeybind = Enum.KeyCode.RightControl,
-        MobileButtonsSide = "Right"
-    })
-
-    local MainTab = Window:AddTab("Main", "home")
-
-    local FeatureBox = MainTab:AddLeftGroupbox("Features")
-
-    FeatureBox:AddLabel(Config.Title)
-    FeatureBox:AddLabel("Game testing features")
-
-    local AutoTrainRunning = false
-    local AutoTrainThread = nil
-
-    local function StartAutoTrain()
-        if AutoTrainRunning then
-            return
-        end
-
-        AutoTrainRunning = true
-
-        AutoTrainThread = task.spawn(function()
-            while AutoTrainRunning and Library.Toggles.AutoTrain.Value do
-                task.wait(0.1)
-
-                if not AutoTrainRunning then
-                    break
-                end
-
-                local Remotes = ReplicatedStorage:FindFirstChild("SharedModules")
-
-                if not Remotes then
-                    continue
-                end
-
-                local Network = Remotes:FindFirstChild("Network")
-
-                if not Network then
-                    continue
-                end
-
-                local RemoteFolder = Network:FindFirstChild("Remotes")
-
-                if not RemoteFolder then
-                    continue
-                end
-
-                local Event = RemoteFolder:FindFirstChild("Activate Dumbell")
-
-                if Event then
-                    pcall(function()
-                        Event:FireServer()
-                    end)
-                end
-            end
-
-            AutoTrainRunning = false
-            AutoTrainThread = nil
-        end)
-    end
-
-    local function StopAutoTrain()
-        AutoTrainRunning = false
-    end
-
-    FeatureBox:AddToggle("AutoTrain", {
-        Text = "Auto Train",
-        Default = false,
-
-        Callback = function(Value)
-            if Value then
-                StartAutoTrain()
-            else
-                StopAutoTrain()
-            end
-        end
-    })
-
-    local SettingsTab = Window:AddTab("Settings", "settings")
-
-    local SettingsBox = SettingsTab:AddLeftGroupbox("Settings")
-
-    SettingsBox:AddButton({
-        Text = "Unload",
-        Func = function()
-            StopAutoTrain()
-            Library:Unload()
-        end
-    })
-
-    Library:OnUnload(function()
-        StopAutoTrain()
-    end)
-end
-
-local function Unlock()
     if KeyBox.Text ~= Config.Key then
         SetStatus(
             "Invalid key.",
@@ -339,16 +398,19 @@ local function Unlock()
         return
     end
 
-    SetStatus(
-        "Unlocked.",
-        Color3.fromRGB(100, 220, 130)
-    )
+    Unlocking = true
+    UnlockButton.Active = false
+    UnlockButton.AutoButtonColor = false
 
-    task.wait(0.15)
+    local Success = LoadObsidian()
 
-    ScreenGui:Destroy()
-
-    LoadObsidian()
+    if Success then
+        ScreenGui:Destroy()
+    else
+        Unlocking = false
+        UnlockButton.Active = true
+        UnlockButton.AutoButtonColor = true
+    end
 end
 
 UnlockButton.MouseButton1Click:Connect(Unlock)
