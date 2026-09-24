@@ -6,7 +6,7 @@ local Config = {
     GetKeyText = "Get Key",
     Footer = "purplxdevs",
     KeyURL = "coming soon!",
-    ObsidianURL = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/Library.lua"
+    ObsidianURL = "https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"
 }
 
 local Players = game:GetService("Players")
